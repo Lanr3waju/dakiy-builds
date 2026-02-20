@@ -1,0 +1,108 @@
+.timeline-view-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.timeline-view-header {
+  margin-bottom: 2rem;
+}
+
+.timeline-view-header h1 {
+  font-size: 2rem;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-view-header p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.project-selector {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.project-selector label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.project-selector select {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+}
+
+.project-selector select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.timeline-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+}
+
+.no-project-selected {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.no-project-selected p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.error-message {
+  padding: 1rem;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 4px;
+  color: #c33;
+  margin-bottom: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .timeline-view-container {
+    padding: 1rem;
+  }
+
+  .timeline-view-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .project-selector {
+    padding: 1rem;
+  }
+
+  .project-selector select {
+    max-width: 100%;
+  }
+
+  .timeline-content {
+    padding: 1rem;
+  }
+}

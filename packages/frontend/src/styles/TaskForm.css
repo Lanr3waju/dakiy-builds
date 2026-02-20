@@ -1,0 +1,265 @@
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 800px;
+}
+
+.form-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.form-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+.section-description {
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.form-group .required {
+  color: #dc3545;
+}
+
+.form-group input[type='text'],
+.form-group input[type='number'],
+.form-group textarea,
+.form-group select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input[type='text']:focus,
+.form-group input[type='number']:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-group input.error,
+.form-group textarea.error,
+.form-group select.error {
+  border-color: #dc3545;
+}
+
+.form-group input.error:focus,
+.form-group textarea.error:focus,
+.form-group select.error:focus {
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.error-message {
+  font-size: 0.75rem;
+  color: #dc3545;
+  margin-top: -0.25rem;
+}
+
+.error-message-box {
+  padding: 0.75rem;
+  background: #f8d7da;
+  border: 1px solid #f5c2c7;
+  border-radius: 4px;
+  color: #842029;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group.flex-1 {
+  flex: 1;
+}
+
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.dependencies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dependency-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.phase-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dependency-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dependency-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.dependency-option:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.dependency-option input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.dependency-name {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #212529;
+}
+
+.dependency-meta {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.submit-error {
+  padding: 0.75rem 1rem;
+  background: #f8d7da;
+  border: 1px solid #f5c2c7;
+  border-radius: 4px;
+  color: #842029;
+  font-size: 0.875rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-primary {
+  background: #0d6efd;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #0b5ed7;
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-primary:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #5c636a;
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .task-form {
+    max-width: 100%;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,84 @@
+.unauthorized-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 1rem;
+}
+
+.unauthorized-card {
+  background: white;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.unauthorized-card h1 {
+  margin: 0;
+  font-size: 4rem;
+  color: #e74c3c;
+}
+
+.unauthorized-card h2 {
+  margin: 1rem 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.unauthorized-card p {
+  margin: 1rem 0 2rem 0;
+  color: #666;
+  font-size: 1rem;
+}
+
+.back-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background-color: #5568d3;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .unauthorized-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .unauthorized-card h1 {
+    font-size: 3rem;
+  }
+
+  .unauthorized-card h2 {
+    font-size: 1.25rem;
+  }
+
+  .unauthorized-card p {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .unauthorized-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .unauthorized-card h1 {
+    font-size: 2.5rem;
+  }
+
+  .back-button {
+    width: 100%;
+  }
+}

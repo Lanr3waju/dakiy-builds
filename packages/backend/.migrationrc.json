@@ -1,0 +1,11 @@
+{
+  "database-url": "postgresql://postgres:postgres@localhost:5433/dakiybuilds",
+  "migrations-dir": "migrations",
+  "migrations-table": "pgmigrations",
+  "dir": "migrations",
+  "check-order": true,
+  "verbose": true,
+  "migration-file-language": "ts",
+  "tsconfig": "tsconfig.json",
+  "ignore-pattern": "^(helpers\\.ts|README\\.md|SETUP_SUMMARY\\.md)$"
+}

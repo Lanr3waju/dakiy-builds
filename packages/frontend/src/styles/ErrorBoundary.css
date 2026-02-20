@@ -1,0 +1,132 @@
+.error-boundary {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.error-boundary-content {
+  background: white;
+  border-radius: 12px;
+  padding: 3rem;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.error-boundary-content h1 {
+  color: #2d3748;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  color: #4a5568;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.error-details {
+  text-align: left;
+  margin: 2rem 0;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.error-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #2d3748;
+  padding: 0.5rem;
+  user-select: none;
+}
+
+.error-details summary:hover {
+  color: #4299e1;
+}
+
+.error-stack {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #2d3748;
+  color: #e2e8f0;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-actions .btn-primary,
+.error-actions .btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.error-actions .btn-primary {
+  background: #4299e1;
+  color: white;
+}
+
+.error-actions .btn-primary:hover {
+  background: #3182ce;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+}
+
+.error-actions .btn-secondary {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+.error-actions .btn-secondary:hover {
+  background: #cbd5e0;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .error-boundary-content {
+    padding: 2rem;
+  }
+
+  .error-boundary-content h1 {
+    font-size: 1.5rem;
+  }
+
+  .error-message {
+    font-size: 1rem;
+  }
+
+  .error-actions {
+    flex-direction: column;
+  }
+
+  .error-actions .btn-primary,
+  .error-actions .btn-secondary {
+    width: 100%;
+  }
+}

@@ -1,0 +1,255 @@
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-loading,
+.timeline-error {
+  padding: 3rem;
+  text-align: center;
+  color: #666;
+}
+
+.timeline-error {
+  color: #dc3545;
+  background: #f8d7da;
+  border-radius: 8px;
+  border: 1px solid #f5c2c7;
+}
+
+.timeline-empty {
+  padding: 3rem;
+  text-align: center;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.timeline-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+.timeline-controls {
+  display: flex;
+  gap: 0.5rem;
+  background: #f8f9fa;
+  padding: 0.25rem;
+  border-radius: 6px;
+}
+
+.view-mode-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  color: #495057;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-mode-btn:hover {
+  background: #e9ecef;
+  color: #212529;
+}
+
+.view-mode-btn.active {
+  background: #0d6efd;
+  color: white;
+}
+
+.timeline-legend {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #495057;
+}
+
+.legend-color {
+  width: 20px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid #dee2e6;
+}
+
+.timeline-gantt {
+  overflow-x: auto;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: white;
+}
+
+/* Override gantt-task-react styles for better appearance */
+.timeline-gantt .gantt-container {
+  font-family: inherit;
+}
+
+.timeline-gantt .gantt-table {
+  border-right: 1px solid #dee2e6;
+}
+
+.timeline-gantt .gantt-table-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.timeline-gantt .gantt-table-row {
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.timeline-gantt .gantt-table-row:hover {
+  background: #f8f9fa;
+}
+
+/* Custom tooltip styles */
+.gantt-tooltip {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+}
+
+.tooltip-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #212529;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.tooltip-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  color: #495057;
+}
+
+.tooltip-info div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .timeline-container {
+    padding: 1rem;
+  }
+
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .timeline-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .timeline-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .view-mode-btn {
+    flex: 1;
+    padding: 0.5rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .timeline-legend {
+    gap: 1rem;
+  }
+
+  .legend-item {
+    font-size: 0.8125rem;
+  }
+
+  .timeline-gantt {
+    /* Enable horizontal scrolling on mobile */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Adjust gantt chart for mobile */
+  .timeline-gantt .gantt-container {
+    min-width: 600px;
+  }
+}
+
+/* Touch interaction improvements for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .view-mode-btn {
+    padding: 0.75rem 1rem;
+    min-height: 44px; /* iOS recommended touch target size */
+  }
+
+  .timeline-gantt {
+    /* Improve touch scrolling */
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
+
+  /* Larger touch targets for gantt bars */
+  .timeline-gantt .bar-wrapper {
+    cursor: pointer;
+  }
+}
+
+/* Tablet responsiveness */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .timeline-container {
+    padding: 1.25rem;
+  }
+
+  .timeline-controls {
+    flex-wrap: nowrap;
+  }
+}
+
+/* Print styles */
+@media print {
+  .timeline-container {
+    box-shadow: none;
+    border: 1px solid #dee2e6;
+  }
+
+  .timeline-controls {
+    display: none;
+  }
+
+  .timeline-gantt {
+    overflow: visible;
+  }
+}

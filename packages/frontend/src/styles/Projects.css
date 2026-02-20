@@ -1,0 +1,327 @@
+.projects-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.projects-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.projects-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #1a1a1a;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.projects-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.search-bar {
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.filter-controls select {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+  cursor: pointer;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.view-toggle button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background-color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+}
+
+.view-toggle button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.view-toggle button:hover {
+  background-color: #f0f0f0;
+}
+
+.view-toggle button.active:hover {
+  background-color: #0056b3;
+}
+
+.projects-table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.projects-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.projects-table thead {
+  background-color: #f8f9fa;
+}
+
+.projects-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.projects-table tbody tr {
+  border-bottom: 1px solid #dee2e6;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.projects-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.projects-table td {
+  padding: 1rem;
+  color: #212529;
+}
+
+.project-name {
+  font-weight: 500;
+  color: #007bff;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-planning {
+  background-color: #e7f3ff;
+  color: #0066cc;
+}
+
+.status-active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-on_hold {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-completed {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.actions {
+  text-align: center;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.25rem 0.5rem;
+  transition: transform 0.2s;
+}
+
+.btn-icon:hover {
+  transform: scale(1.2);
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.project-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.project-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card-field {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card-field .label {
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background-color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-weight: 500;
+  color: #495057;
+}
+
+.loading,
+.error,
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.1rem;
+  color: #6c757d;
+}
+
+.error {
+  color: #dc3545;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .projects-container {
+    padding: 1rem;
+  }
+
+  .projects-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .projects-controls {
+    flex-direction: column;
+  }
+
+  .search-bar {
+    min-width: 100%;
+  }
+
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-controls select {
+    width: 100%;
+  }
+
+  .projects-table-container {
+    overflow-x: scroll;
+  }
+
+  .projects-table {
+    min-width: 600px;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+}

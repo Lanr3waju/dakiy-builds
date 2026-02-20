@@ -1,0 +1,246 @@
+.dashboard-container {
+  width: 100%;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.dashboard-subtitle {
+  margin: 0;
+  color: #718096;
+  font-size: 1rem;
+}
+
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.kpi-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.kpi-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.kpi-icon {
+  font-size: 2.5rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.kpi-info {
+  flex: 1;
+}
+
+.kpi-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: #718096;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-value {
+  margin: 0;
+  color: #2d3748;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.dashboard-placeholder {
+  background: white;
+  border-radius: 12px;
+  padding: 3rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  color: #718096;
+}
+
+.dashboard-loading,
+.dashboard-error {
+  background: white;
+  border-radius: 12px;
+  padding: 3rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.dashboard-loading p {
+  color: #718096;
+  margin: 0;
+}
+
+.dashboard-error p {
+  color: #e53e3e;
+  margin: 0;
+}
+
+.risk-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.risk-alert {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  border-left: 4px solid;
+}
+
+.risk-alert.high-risk {
+  border-left-color: #f56565;
+  background: #fff5f5;
+}
+
+.risk-alert-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.risk-alert-content {
+  flex: 1;
+}
+
+.risk-alert-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.risk-alert-content p {
+  margin: 0;
+  color: #4a5568;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.analytics-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.analytics-header h2 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.project-selector {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #2d3748;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  min-width: 200px;
+}
+
+.project-selector:hover {
+  border-color: #cbd5e0;
+}
+
+.project-selector:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+@media (max-width: 768px) {
+  .dashboard-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .kpi-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-placeholder,
+  .dashboard-loading,
+  .dashboard-error {
+    padding: 2rem 1rem;
+  }
+
+  .risk-alert {
+    padding: 1rem;
+  }
+
+  .risk-alert-icon {
+    font-size: 1.5rem;
+  }
+
+  .risk-alert-content h3 {
+    font-size: 1rem;
+  }
+
+  .analytics-section {
+    padding: 1rem;
+  }
+
+  .analytics-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .analytics-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .project-selector {
+    width: 100%;
+    min-width: unset;
+  }
+}
+

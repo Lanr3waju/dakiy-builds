@@ -1,73 +1,97 @@
-# Welcome to your Lovable project
+# DakiyBuilds Platform
 
-## Project info
+AI-powered construction project management platform for small to medium construction firms.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Project Structure
 
-## How can I edit this code?
+This is a monorepo containing:
 
-There are several ways of editing your application.
+- `packages/backend` - Node.js/Express REST API server
+- `packages/frontend` - React web application
 
-**Use Lovable**
+## Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- Node.js >= 18.0.0
+- npm >= 9.0.0
+- PostgreSQL >= 14
+- Redis >= 6
+- AWS S3 account (or S3-compatible storage)
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Quick Setup (5 minutes)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. **Start database services with Docker**
+   ```bash
+   docker-compose up -d
+   ```
+   
+   This starts PostgreSQL and Redis. If you don't have Docker, see [SETUP.md](./SETUP.md) for manual installation.
 
-Follow these steps:
+3. **Run database migrations**
+   ```bash
+   cd packages/backend
+   npm run migrate up
+   cd ../..
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+4. **Start development servers**
+   ```bash
+   npm run dev
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+5. **Access the application**
+   - Backend API: http://localhost:3000
+   - Frontend: http://localhost:5173
+   - Health check: http://localhost:3000/health
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Detailed Setup
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+For detailed setup instructions, troubleshooting, and manual installation without Docker, see [SETUP.md](./SETUP.md).
 
-**Edit a file directly in GitHub**
+## Available Scripts
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- `npm run dev` - Start all workspaces in development mode
+- `npm run build` - Build all workspaces
+- `npm run test` - Run tests in all workspaces
+- `npm run lint` - Lint all workspaces
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting
 
-**Use GitHub Codespaces**
+## Technology Stack
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
+### Backend
+- Node.js with Express
 - TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- PostgreSQL with connection pooling
+- Redis for caching
+- AWS S3 for document storage
+- Winston for logging
+- JWT for authentication
 
-## How can I deploy this project?
+### Frontend
+- React 18
+- TypeScript
+- Vite
+- React Router
+- Axios
+- Recharts for data visualization
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Architecture
 
-## Can I connect a custom domain to my Lovable project?
+The platform follows a modular architecture with:
+- REST API Gateway with authentication middleware
+- Service-oriented backend components
+- PostgreSQL for relational data
+- Redis for caching and session management
+- S3 for document storage
+- AI forecasting service for project predictions
 
-Yes, you can!
+## License
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Private - All rights reserved

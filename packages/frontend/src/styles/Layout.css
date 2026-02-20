@@ -1,0 +1,45 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.layout-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  background-color: #f5f5f5;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .layout-body {
+    flex-direction: column;
+  }
+
+  .main-content {
+    padding: 1rem;
+    padding-top: 4rem; /* Space for hamburger menu */
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .main-content {
+    padding: 1.5rem;
+  }
+}
+
+/* Touch-friendly scrolling */
+@media (hover: none) and (pointer: coarse) {
+  .main-content {
+    -webkit-overflow-scrolling: touch;
+  }
+}
