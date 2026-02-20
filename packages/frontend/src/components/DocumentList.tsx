@@ -7,22 +7,24 @@ interface Document {
   id: string;
   filename: string;
   description?: string;
-  file_size: number;
+  file_size_bytes: number;
   mime_type: string;
   uploaded_by: string;
   uploaded_at: string;
   tags?: string[];
-  version: number;
+  current_version: number;
   linked_to_type?: string;
   linked_to_id?: string;
+  uploader_name?: string;
 }
 
 interface DocumentVersion {
   id: string;
-  version: number;
+  version_number: number;
   uploaded_by: string;
   uploaded_at: string;
-  file_size: number;
+  file_size_bytes: number;
+  uploader_name?: string;
 }
 
 interface DocumentListProps {
@@ -56,34 +58,52 @@ function DocumentList({ projectId, taskId, onUpload }: DocumentListProps) {
       setLoading(true);
       let url = '/documents';
       const params: string[] = [];
-      
+
       if (projectId) {
         params.push(`project_id=${projectId}`);
       }
       if (taskId) {
         params.push(`task_id=${taskId}`);
       }
-      
+
       if (params.length > 0) {
         url += `?${params.join('&')}`;
       }
 
       const response = await apiClient.get(url);
-      // Backend returns { success: true, data: documents, count: ... }
       const documentsList = response.data.data || response.data || [];
-      setDocuments(Array.isArray(documentsList) ? documentsList : []);
-      
+
+      // Fetch uploader names for all documents
+      const docsWithNames = await Promise.all(
+        (Array.isArray(documentsList) ? documentsList : []).map(async (doc: Document) => {
+          try {
+            const userResponse = await apiClient.get(`/users/${doc.uploaded_by}`);
+            const userData = userResponse.data.data || userResponse.data;
+            return {
+              ...doc,
+              uploader_name: `${userData.firstName} ${userData.lastName}`,
+            };
+          } catch (err) {
+            console.error('Failed to fetch user:', err);
+            return {
+              ...doc,
+              uploader_name: 'Unknown User',
+            };
+          }
+        })
+      );
+
+      setDocuments(docsWithNames);
+
       // Extract unique tags
       const tags = new Set<string>();
-      if (Array.isArray(documentsList)) {
-        documentsList.forEach((doc: Document) => {
-          if (doc.tags) {
-            doc.tags.forEach((tag) => tags.add(tag));
-          }
-        });
-      }
+      docsWithNames.forEach((doc: Document) => {
+        if (doc.tags) {
+          doc.tags.forEach((tag) => tags.add(tag));
+        }
+      });
       setAllTags(Array.from(tags).sort());
-      
+
       setError(null);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load documents');
@@ -107,9 +127,7 @@ function DocumentList({ projectId, taskId, onUpload }: DocumentListProps) {
 
     // Filter by selected tags
     if (selectedTags.length > 0) {
-      filtered = filtered.filter((doc) =>
-        selectedTags.every((tag) => doc.tags?.includes(tag))
-      );
+      filtered = filtered.filter((doc) => selectedTags.every((tag) => doc.tags?.includes(tag)));
     }
 
     setFilteredDocuments(filtered);
@@ -117,10 +135,9 @@ function DocumentList({ projectId, taskId, onUpload }: DocumentListProps) {
 
   const handleDownload = async (documentId: string) => {
     try {
-      // Backend returns { success: true, data: { downloadUrl: string } }
       const response = await apiClient.get(`/documents/${documentId}/download`);
       const downloadUrl = response.data.data?.downloadUrl || response.data.downloadUrl;
-      
+
       if (downloadUrl) {
         // Open the download URL in a new window
         window.open(downloadUrl, '_blank');
@@ -164,9 +181,29 @@ function DocumentList({ projectId, taskId, onUpload }: DocumentListProps) {
   const fetchVersions = async (documentId: string) => {
     try {
       const response = await apiClient.get(`/documents/${documentId}/versions`);
-      // Backend returns { success: true, data: versions, count: ... }
       const versionsList = response.data.data || response.data || [];
-      setVersions((prev) => ({ ...prev, [documentId]: Array.isArray(versionsList) ? versionsList : [] }));
+
+      // Fetch uploader names for all versions
+      const versionsWithNames = await Promise.all(
+        (Array.isArray(versionsList) ? versionsList : []).map(async (version: DocumentVersion) => {
+          try {
+            const userResponse = await apiClient.get(`/users/${version.uploaded_by}`);
+            const userData = userResponse.data.data || userResponse.data;
+            return {
+              ...version,
+              uploader_name: `${userData.firstName} ${userData.lastName}`,
+            };
+          } catch (err) {
+            console.error('Failed to fetch user:', err);
+            return {
+              ...version,
+              uploader_name: 'Unknown User',
+            };
+          }
+        })
+      );
+
+      setVersions((prev) => ({ ...prev, [documentId]: versionsWithNames }));
     } catch (err) {
       console.error('Failed to fetch versions:', err);
     }
@@ -179,16 +216,22 @@ function DocumentList({ projectId, taskId, onUpload }: DocumentListProps) {
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (!bytes || bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    if (!dateString) return 'Invalid Date';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    } catch (error) {
+      return 'Invalid Date';
+    }
   };
 
   const canDelete = user?.role === 'Admin' || user?.role === 'Project_Manager';
@@ -258,16 +301,14 @@ function DocumentList({ projectId, taskId, onUpload }: DocumentListProps) {
                   <div className="document-icon">📄</div>
                   <div className="document-info">
                     <h4 className="document-filename">{doc.filename}</h4>
-                    {doc.description && (
-                      <p className="document-description">{doc.description}</p>
-                    )}
+                    {doc.description && <p className="document-description">{doc.description}</p>}
                   </div>
                 </div>
 
                 <div className="document-metadata">
                   <div className="metadata-row">
                     <span className="metadata-label">Size:</span>
-                    <span className="metadata-value">{formatFileSize(doc.file_size)}</span>
+                    <span className="metadata-value">{formatFileSize(doc.file_size_bytes)}</span>
                   </div>
                   <div className="metadata-row">
                     <span className="metadata-label">Type:</span>
@@ -275,7 +316,7 @@ function DocumentList({ projectId, taskId, onUpload }: DocumentListProps) {
                   </div>
                   <div className="metadata-row">
                     <span className="metadata-label">Version:</span>
-                    <span className="metadata-value">v{doc.version}</span>
+                    <span className="metadata-value">v{doc.current_version}</span>
                   </div>
                   <div className="metadata-row">
                     <span className="metadata-label">Uploaded:</span>
@@ -283,7 +324,7 @@ function DocumentList({ projectId, taskId, onUpload }: DocumentListProps) {
                   </div>
                   <div className="metadata-row">
                     <span className="metadata-label">By:</span>
-                    <span className="metadata-value">{doc.uploaded_by}</span>
+                    <span className="metadata-value">{doc.uploader_name || 'Loading...'}</span>
                   </div>
                 </div>
 
@@ -332,13 +373,13 @@ function DocumentList({ projectId, taskId, onUpload }: DocumentListProps) {
                       <div className="versions-list">
                         {docVersions.map((version) => (
                           <div key={version.id} className="version-item">
-                            <span className="version-number">v{version.version}</span>
-                            <span className="version-date">
-                              {formatDate(version.uploaded_at)}
+                            <span className="version-number">v{version.version_number}</span>
+                            <span className="version-date">{formatDate(version.uploaded_at)}</span>
+                            <span className="version-user">
+                              {version.uploader_name || 'Loading...'}
                             </span>
-                            <span className="version-user">{version.uploaded_by}</span>
                             <span className="version-size">
-                              {formatFileSize(version.file_size)}
+                              {formatFileSize(version.file_size_bytes)}
                             </span>
                           </div>
                         ))}
