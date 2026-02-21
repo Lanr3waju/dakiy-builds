@@ -14,6 +14,8 @@ interface TimelineTask {
   assigned_to: string | null;
   assigned_to_name: string | null;
   dependencies: Array<{ depends_on_task_id: string }>;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 interface TimelineProject {
@@ -46,7 +48,9 @@ function Timeline({ projectId }: TimelineProps) {
     try {
       setLoading(true);
       const response = await apiClient.get(`/projects/${projectId}/timeline`);
-      setTimelineData(response.data.data);
+      // Backend returns { success: true, data: timelineData }
+      const data = response.data.data || response.data;
+      setTimelineData(data);
       setError(null);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load timeline data');
@@ -66,7 +70,7 @@ function Timeline({ projectId }: TimelineProps) {
     const taskStartDates = new Map<string, Date>();
     const taskEndDates = new Map<string, Date>();
 
-    // Calculate start and end dates for each task based on dependencies
+    // Calculate start and end dates for each task based on dependencies (for legacy tasks)
     const calculateTaskDates = (task: TimelineTask, visited = new Set<string>()): Date => {
       // Prevent circular dependency infinite loops
       if (visited.has(task.id)) {
@@ -107,10 +111,17 @@ function Timeline({ projectId }: TimelineProps) {
 
     // Calculate dates for all tasks
     timelineData.tasks.forEach((task) => {
-      const startDate = calculateTaskDates(task);
-      const endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + task.estimated_duration_days);
-      taskEndDates.set(task.id, endDate);
+      // Use actual dates if available (date-based tasks)
+      if (task.start_date && task.end_date) {
+        taskStartDates.set(task.id, new Date(task.start_date));
+        taskEndDates.set(task.id, new Date(task.end_date));
+      } else {
+        // Legacy task: calculate dates from duration and dependencies for backward compatibility
+        const startDate = calculateTaskDates(task);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + task.estimated_duration_days);
+        taskEndDates.set(task.id, endDate);
+      }
     });
 
     // Convert to Gantt task format
@@ -275,7 +286,7 @@ function Timeline({ projectId }: TimelineProps) {
                 <div className="tooltip-title">{task.name}</div>
                 <div className="tooltip-info">
                   <div>Phase: {task.project}</div>
-                  <div>Progress: {task.progress}%</div>
+                  <div>Progress: {task.progress || 0}%</div>
                   <div>
                     Duration: {Math.ceil((task.end.getTime() - task.start.getTime()) / (1000 * 60 * 60 * 24))} days
                   </div>

@@ -8,6 +8,7 @@ import {
   CreateUserDTO,
   UpdateUserDTO,
   UserRole,
+  updateOwnProfile,
 } from '../services/user.service';
 import { authenticate, requireAdmin, requireAuthenticated, AuthenticatedRequest } from '../middleware/auth.middleware';
 import { ValidationError } from '../utils/errors';
@@ -44,11 +45,12 @@ router.put(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { first_name, last_name } = req.body;
 
-    const updateDTO: UpdateUserDTO = {};
+    const updateDTO: { firstName?: string; lastName?: string } = {};
     if (first_name !== undefined) updateDTO.firstName = first_name;
     if (last_name !== undefined) updateDTO.lastName = last_name;
 
-    const updatedUser = await updateUser(req.user!.id, updateDTO, req.user!.id);
+    // Use updateOwnProfile instead of updateUser (no admin check needed)
+    const updatedUser = await updateOwnProfile(req.user!.id, updateDTO);
 
     logger.info('User profile updated', { userId: req.user!.id });
 
@@ -58,6 +60,7 @@ router.put(
     });
   })
 );
+
 
 // All other user management routes require admin role
 router.use(authenticate);

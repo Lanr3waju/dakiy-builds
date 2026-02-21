@@ -24,6 +24,154 @@ export interface Task {
   created_by: string;
   created_at: Date;
   updated_at: Date;
+  start_date?: Date | null;
+  end_date?: Date | null;
+  auto_progress_enabled?: boolean;
+}
+
+export type TaskStatus = 'not_started' | 'in_progress' | 'overdue' | 'completed';
+
+// Date Calculation Functions
+
+/**
+ * Calculate automatic progress based on elapsed time between start and end dates
+ * @param task - The task object with date fields
+ * @returns Progress percentage (0-100)
+ */
+export function calculateAutoProgress(task: Task): number {
+  // If task is completed, return 100
+  if (task.is_completed) {
+    return 100;
+  }
+
+  // If no dates are set, return current progress
+  if (!task.start_date || !task.end_date) {
+    return task.progress_percentage;
+  }
+
+  const now = new Date();
+  const start = new Date(task.start_date);
+  const end = new Date(task.end_date);
+
+  // If before start date, return 0
+  if (now < start) {
+    return 0;
+  }
+
+  // If after end date, return 100
+  if (now > end) {
+    return 100;
+  }
+
+  // Calculate progress based on elapsed time
+  const totalDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+  const elapsedDays = (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+
+  return Math.min(100, Math.max(0, Math.round((elapsedDays / totalDays) * 100)));
+}
+
+/**
+ * Determine the current status of a task based on dates and completion
+ * @param task - The task object with date fields
+ * @returns Task status
+ */
+export function determineTaskStatus(task: Task): TaskStatus {
+  // If completed, return completed status
+  if (task.is_completed) {
+    return 'completed';
+  }
+
+  // If no dates, we can't determine status from dates (legacy duration-based task)
+  // Return 'in_progress' as a safe default for backward compatibility
+  if (!task.start_date || !task.end_date) {
+    return 'in_progress';
+  }
+
+  const now = new Date();
+  const start = new Date(task.start_date);
+  const end = new Date(task.end_date);
+
+  // If before start date, not started
+  if (now < start) {
+    return 'not_started';
+  }
+
+  // If after end date, overdue
+  if (now > end) {
+    return 'overdue';
+  }
+
+  // Otherwise, in progress
+  return 'in_progress';
+}
+
+/**
+ * Calculate days remaining until task end date
+ * @param task - The task object with date fields
+ * @returns Number of days remaining (negative if overdue), or null if no end date
+ */
+export function calculateDaysRemaining(task: Task): number | null {
+  // If completed, return 0
+  if (task.is_completed) {
+    return 0;
+  }
+
+  // If no end date, return null
+  if (!task.end_date) {
+    return null;
+  }
+
+  const now = new Date();
+  const end = new Date(task.end_date);
+
+  // Calculate difference in milliseconds and convert to days
+  const diffTime = end.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return diffDays;
+}
+
+/**
+ * Calculate duration in days between two dates
+ * @param startDate - Start date
+ * @param endDate - End date
+ * @returns Number of days between dates
+ */
+export function calculateDuration(startDate: Date | string, endDate: Date | string): number {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  // Calculate difference in milliseconds and convert to days
+  const diffTime = end.getTime() - start.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return diffDays;
+}
+
+/**
+ * Validate date range - endDate must be >= startDate
+ * @param startDate - Start date string
+ * @param endDate - End date string
+ * @throws ValidationError if date range is invalid
+ */
+function validateDateRange(startDate?: string, endDate?: string): void {
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Check if dates are valid
+    if (isNaN(start.getTime())) {
+      throw new ValidationError('Invalid start date format');
+    }
+    if (isNaN(end.getTime())) {
+      throw new ValidationError('Invalid end date format');
+    }
+    
+    // Check if end date is before start date
+    if (end < start) {
+      throw new ValidationError('End date must be greater than or equal to start date');
+    }
+  }
 }
 
 export interface CreateTaskDTO {
@@ -32,6 +180,9 @@ export interface CreateTaskDTO {
   phase: string;
   estimated_duration_days: number;
   assigned_to?: string;
+  startDate?: string;
+  endDate?: string;
+  autoProgressEnabled?: boolean;
 }
 
 export interface UpdateTaskDTO {
@@ -40,6 +191,9 @@ export interface UpdateTaskDTO {
   phase?: string;
   estimated_duration_days?: number;
   assigned_to?: string;
+  startDate?: string;
+  endDate?: string;
+  autoProgressEnabled?: boolean;
 }
 
 export interface TaskDependency {
@@ -85,6 +239,9 @@ export async function createTask(
     throw new ValidationError('Estimated duration must be a positive number');
   }
 
+  // Validate date range if both dates are provided
+  validateDateRange(data.startDate, data.endDate);
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -116,13 +273,13 @@ export async function createTask(
       }
     }
 
-    // Create task
+    // Create task with date fields
     const result = await client.query(
       `INSERT INTO tasks (
         project_id, name, description, phase, estimated_duration_days, 
-        assigned_to, created_by
+        assigned_to, created_by, start_date, end_date, auto_progress_enabled
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *`,
       [
         projectId,
@@ -132,6 +289,9 @@ export async function createTask(
         data.estimated_duration_days,
         data.assigned_to || null,
         userId,
+        data.startDate || null,
+        data.endDate || null,
+        data.autoProgressEnabled !== undefined ? data.autoProgressEnabled : true,
       ]
     );
 
@@ -180,13 +340,16 @@ export async function updateTask(
     throw new ValidationError('Estimated duration must be a positive number');
   }
 
+  // Validate date range if dates are being updated
+  validateDateRange(data.startDate, data.endDate);
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     // Verify task exists and user has access
     const taskCheck = await client.query(
-      `SELECT t.id, t.project_id
+      `SELECT t.id, t.project_id, t.start_date, t.end_date
        FROM tasks t
        JOIN projects p ON t.project_id = p.id
        LEFT JOIN project_team_members ptm ON p.id = ptm.project_id
@@ -198,6 +361,15 @@ export async function updateTask(
 
     if (taskCheck.rows.length === 0) {
       throw new NotFoundError('Task not found or access denied');
+    }
+
+    // If only one date is being updated, validate with existing date
+    const existingTask = taskCheck.rows[0];
+    if (data.startDate && !data.endDate && existingTask.end_date) {
+      validateDateRange(data.startDate, existingTask.end_date);
+    }
+    if (!data.startDate && data.endDate && existingTask.start_date) {
+      validateDateRange(existingTask.start_date, data.endDate);
     }
 
     // If assigned_to is provided, verify user exists
@@ -240,6 +412,21 @@ export async function updateTask(
     if (data.assigned_to !== undefined) {
       updates.push(`assigned_to = $${paramCount++}`);
       values.push(data.assigned_to || null);
+    }
+
+    if (data.startDate !== undefined) {
+      updates.push(`start_date = $${paramCount++}`);
+      values.push(data.startDate || null);
+    }
+
+    if (data.endDate !== undefined) {
+      updates.push(`end_date = $${paramCount++}`);
+      values.push(data.endDate || null);
+    }
+
+    if (data.autoProgressEnabled !== undefined) {
+      updates.push(`auto_progress_enabled = $${paramCount++}`);
+      values.push(data.autoProgressEnabled);
     }
 
     if (updates.length === 0) {
@@ -725,12 +912,21 @@ export async function getProgressHistory(
     throw new NotFoundError('Task not found or access denied');
   }
 
-  const result = await pool.query(
-    `SELECT * FROM task_progress_history 
-     WHERE task_id = $1 
-     ORDER BY created_at ASC`,
-    [taskId]
-  );
+const result = await pool.query(
+  `SELECT 
+     tph.id,
+     tph.task_id,
+     tph.progress_percentage,
+     tph.notes,
+     tph.updated_by,
+     tph.created_at,
+     CONCAT(u.first_name, ' ', u.last_name) AS updated_by_username
+   FROM task_progress_history tph
+   LEFT JOIN users u ON tph.updated_by = u.id
+   WHERE tph.task_id = $1 
+   ORDER BY tph.created_at ASC`,
+  [taskId]
+);
 
   return result.rows;
 }

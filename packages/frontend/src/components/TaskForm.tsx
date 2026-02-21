@@ -19,7 +19,9 @@ interface TaskFormData {
   name: string;
   description: string;
   phase: string;
-  duration_days: string;
+  startDate: string;
+  endDate: string;
+  autoProgressEnabled: boolean;
   assigned_to: string;
   status: string;
 }
@@ -43,7 +45,9 @@ function TaskForm({ projectId, taskId, initialData, onSuccess, onCancel }: TaskF
     name: initialData?.name || '',
     description: initialData?.description || '',
     phase: initialData?.phase || '',
-    duration_days: initialData?.duration_days?.toString() || '',
+    startDate: '',
+    endDate: '',
+    autoProgressEnabled: true,
     assigned_to: initialData?.assigned_to || '',
     status: initialData?.status || 'pending',
   });
@@ -53,6 +57,7 @@ function TaskForm({ projectId, taskId, initialData, onSuccess, onCancel }: TaskF
   const [existingDependencies, setExistingDependencies] = useState<string[]>([]);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [warnings, setWarnings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -67,28 +72,36 @@ function TaskForm({ projectId, taskId, initialData, onSuccess, onCancel }: TaskF
   const fetchAvailableTasks = async () => {
     try {
       const response = await apiClient.get(`/projects/${projectId}/tasks`);
-      const tasks = response.data.filter((task: Task) => task.id !== taskId);
+      // Backend returns { success: true, data: tasks }
+      const tasksData = response.data.data || response.data || [];
+      const tasks = (Array.isArray(tasksData) ? tasksData : []).filter((task: Task) => task.id !== taskId);
       setAvailableTasks(tasks);
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
+      setAvailableTasks([]);
     }
   };
 
   const fetchAvailableUsers = async () => {
     try {
       const response = await apiClient.get('/users');
-      setAvailableUsers(response.data);
+      // Backend returns { success: true, data: users }
+      const users = response.data.data || response.data || [];
+      setAvailableUsers(Array.isArray(users) ? users : []);
     } catch (err) {
       console.error('Failed to fetch users:', err);
+      setAvailableUsers([]);
     }
   };
 
   const fetchExistingDependencies = async () => {
     try {
       const response = await apiClient.get(`/tasks/${taskId}`);
-      if (response.data.dependencies) {
-        setExistingDependencies(response.data.dependencies);
-        setSelectedDependencies(response.data.dependencies);
+      // Backend returns { success: true, data: task }
+      const taskData = response.data.data || response.data;
+      if (taskData.dependencies) {
+        setExistingDependencies(taskData.dependencies);
+        setSelectedDependencies(taskData.dependencies);
       }
     } catch (err) {
       console.error('Failed to fetch dependencies:', err);
@@ -132,6 +145,7 @@ function TaskForm({ projectId, taskId, initialData, onSuccess, onCancel }: TaskF
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+    const newWarnings: Record<string, string> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = 'Task name is required';
@@ -141,8 +155,27 @@ function TaskForm({ projectId, taskId, initialData, onSuccess, onCancel }: TaskF
       newErrors.phase = 'Phase is required';
     }
 
-    if (!formData.duration_days || parseFloat(formData.duration_days) <= 0) {
-      newErrors.duration_days = 'Duration must be a positive number';
+    if (!formData.startDate) {
+      newErrors.startDate = 'Start date is required';
+    }
+
+    if (!formData.endDate) {
+      newErrors.endDate = 'End date is required';
+    }
+
+    if (formData.startDate && formData.endDate && formData.endDate < formData.startDate) {
+      newErrors.endDate = 'End date must be after start date';
+    }
+
+    // Optional warning for past start date
+    if (formData.startDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+      const startDate = new Date(formData.startDate);
+      
+      if (startDate < today) {
+        newWarnings.startDate = 'Start date is in the past';
+      }
     }
 
     if (taskId && !validateCircularDependency(selectedDependencies)) {
@@ -150,16 +183,38 @@ function TaskForm({ projectId, taskId, initialData, onSuccess, onCancel }: TaskF
     }
 
     setErrors(newErrors);
+    setWarnings(newWarnings);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const calculateDuration = (): number | null => {
+    if (!formData.startDate || !formData.endDate) {
+      return null;
+    }
+    const start = new Date(formData.startDate);
+    const end = new Date(formData.endDate);
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
+    setFormData((prev) => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }));
+    
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+    
+    if (warnings[name]) {
+      setWarnings((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
@@ -190,9 +245,14 @@ function TaskForm({ projectId, taskId, initialData, onSuccess, onCancel }: TaskF
 
     try {
       const taskData = {
-        ...formData,
-        duration_days: parseFloat(formData.duration_days),
+        name: formData.name,
+        description: formData.description,
+        phase: formData.phase,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        autoProgressEnabled: formData.autoProgressEnabled,
         assigned_to: formData.assigned_to || undefined,
+        status: formData.status,
       };
 
       let createdTaskId = taskId;
@@ -201,7 +261,9 @@ function TaskForm({ projectId, taskId, initialData, onSuccess, onCancel }: TaskF
         await apiClient.put(`/tasks/${taskId}`, taskData);
       } else {
         const response = await apiClient.post(`/projects/${projectId}/tasks`, taskData);
-        createdTaskId = response.data.id;
+        // Backend returns { success: true, data: task }
+        const task = response.data.data || response.data;
+        createdTaskId = task.id;
       }
 
       // Update dependencies
@@ -309,25 +371,63 @@ function TaskForm({ projectId, taskId, initialData, onSuccess, onCancel }: TaskF
             />
             {errors.phase && <span className="error-message">{errors.phase}</span>}
           </div>
+        </div>
+
+        <div className="form-section date-range-section">
+          <h4>Date Range</h4>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="startDate">
+                Start Date <span className="required">*</span>
+              </label>
+              <input
+                type="date"
+                id="startDate"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleInputChange}
+                className={errors.startDate ? 'error' : ''}
+              />
+              {errors.startDate && <span className="error-message">{errors.startDate}</span>}
+              {warnings.startDate && <span className="warning-message">{warnings.startDate}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="endDate">
+                End Date <span className="required">*</span>
+              </label>
+              <input
+                type="date"
+                id="endDate"
+                name="endDate"
+                value={formData.endDate}
+                onChange={handleInputChange}
+                className={errors.endDate ? 'error' : ''}
+              />
+              {errors.endDate && <span className="error-message">{errors.endDate}</span>}
+            </div>
+          </div>
 
           <div className="form-group">
-            <label htmlFor="duration_days">
-              Duration (days) <span className="required">*</span>
-            </label>
-            <input
-              type="number"
-              id="duration_days"
-              name="duration_days"
-              value={formData.duration_days}
-              onChange={handleInputChange}
-              min="0"
-              step="0.5"
-              className={errors.duration_days ? 'error' : ''}
-            />
-            {errors.duration_days && (
-              <span className="error-message">{errors.duration_days}</span>
-            )}
+            <label className="duration-display-label">Duration</label>
+            <div className="duration-display">
+              {calculateDuration() !== null 
+                ? `${calculateDuration()} days (auto-calculated)` 
+                : 'Select start and end dates'}
+            </div>
           </div>
+        </div>
+
+        <div className="form-group">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="autoProgressEnabled"
+              checked={formData.autoProgressEnabled}
+              onChange={handleInputChange}
+            />
+            <span>Enable automatic progress calculation (based on elapsed time)</span>
+          </label>
         </div>
 
         <div className="form-row">
@@ -340,7 +440,7 @@ function TaskForm({ projectId, taskId, initialData, onSuccess, onCancel }: TaskF
               onChange={handleInputChange}
             >
               <option value="">Unassigned</option>
-              {availableUsers.map((user) => (
+              {(Array.isArray(availableUsers) ? availableUsers : []).map((user) => (
                 <option key={user.id} value={user.id}>
                   {user.username} ({user.email})
                 </option>

@@ -250,7 +250,7 @@ describe('Authentication Middleware', () => {
 
       expect(mockNext).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Access denied. Required role: admin',
+          message: 'Access denied. Required role: Admin',
           statusCode: 403,
         })
       );

@@ -8,7 +8,7 @@ import {
 } from '../utils/errors';
 import logger from '../utils/logger';
 
-export type ProjectRole = 'Owner' | 'Manager' | 'Member' | 'Viewer';
+export type ProjectRole = 'Admin' | 'Project_Manager' | 'Team_Member';
 
 export interface Project {
   id: string;
@@ -271,7 +271,7 @@ export async function createProject(
     await client.query(
       `INSERT INTO project_team_members (project_id, user_id, role, assigned_by)
        VALUES ($1, $2, $3, $4)`,
-      [project.id, userId, 'Owner', userId]
+      [project.id, userId, 'Admin', userId]
     );
 
     // Create audit log
@@ -746,9 +746,9 @@ export async function assignTeamMember(
   assignedBy: string
 ): Promise<void> {
   // Validate role
-  const validRoles: ProjectRole[] = ['Owner', 'Manager', 'Member', 'Viewer'];
+  const validRoles: ProjectRole[] = ['Admin', 'Project_Manager', 'Team_Member',];
   if (!validRoles.includes(role)) {
-    throw new ValidationError('Invalid role. Must be one of: Owner, Manager, Member, Viewer');
+    throw new ValidationError('Invalid role. Must be one of: Admin, Project_Manager, Team_Member');
   }
 
   const client = await pool.connect();

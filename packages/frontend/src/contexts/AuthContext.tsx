@@ -15,6 +15,7 @@ interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -58,6 +59,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshUser = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return;
+    }
+
+    try {
+      const response = await apiClient.get('/auth/me');
+      if (response.data.success && response.data.data.user) {
+        setUser(response.data.data.user);
+      }
+    } catch (err) {
+      console.error('Failed to refresh user:', err);
     }
   };
 
@@ -105,6 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     error,
     login,
     logout,
+    refreshUser,
     clearError,
   };
 

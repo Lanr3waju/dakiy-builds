@@ -100,6 +100,32 @@
   border: 1px solid #dee2e6;
 }
 
+/* Status-based legend colors */
+.legend-color.not-started {
+  background-color: #adb5bd;
+  border-color: #868e96;
+}
+
+.legend-color.on-track {
+  background-color: #28a745;
+  border-color: #218838;
+}
+
+.legend-color.at-risk {
+  background-color: #ffc107;
+  border-color: #e0a800;
+}
+
+.legend-color.overdue {
+  background-color: #dc3545;
+  border-color: #c82333;
+}
+
+.legend-color.completed {
+  background-color: #0d6efd;
+  border-color: #0a58ca;
+}
+
 .timeline-gantt {
   overflow-x: auto;
   overflow-y: auto;
@@ -120,6 +146,8 @@
 .timeline-gantt .gantt-table-header {
   background: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
+  font-weight: 600;
+  color: #212529;
 }
 
 .timeline-gantt .gantt-table-row {
@@ -130,6 +158,83 @@
   background: #f8f9fa;
 }
 
+/* Date labels styling */
+.timeline-gantt .gantt-calendar-top,
+.timeline-gantt .gantt-calendar-bottom {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.timeline-gantt .gantt-calendar-top {
+  font-weight: 600;
+  color: #212529;
+}
+
+/* Task bar styling based on status */
+.timeline-gantt .bar-wrapper {
+  cursor: pointer;
+}
+
+/* Not started tasks - gray */
+.timeline-gantt .bar.not-started {
+  fill: #adb5bd !important;
+}
+
+.timeline-gantt .bar-progress.not-started {
+  fill: #868e96 !important;
+}
+
+/* On track tasks - green */
+.timeline-gantt .bar.on-track {
+  fill: #d4edda !important;
+}
+
+.timeline-gantt .bar-progress.on-track {
+  fill: #28a745 !important;
+}
+
+/* At risk tasks - yellow */
+.timeline-gantt .bar.at-risk {
+  fill: #fff3cd !important;
+}
+
+.timeline-gantt .bar-progress.at-risk {
+  fill: #ffc107 !important;
+}
+
+/* Overdue tasks - red with stronger visual distinction */
+.timeline-gantt .bar.overdue {
+  fill: #f8d7da !important;
+  stroke: #dc3545 !important;
+  stroke-width: 2px !important;
+}
+
+.timeline-gantt .bar-progress.overdue {
+  fill: #dc3545 !important;
+}
+
+/* Completed tasks - blue */
+.timeline-gantt .bar.completed {
+  fill: #cfe2ff !important;
+}
+
+.timeline-gantt .bar-progress.completed {
+  fill: #0d6efd !important;
+}
+
+/* Enhanced overdue task styling */
+.timeline-gantt .bar-wrapper.overdue .bar-label {
+  font-weight: 600;
+  fill: #721c24 !important;
+}
+
+/* Date range display in task bars */
+.timeline-gantt .bar-date {
+  font-size: 0.75rem;
+  fill: #495057;
+}
+
 /* Custom tooltip styles */
 .gantt-tooltip {
   background: white;
@@ -138,6 +243,7 @@
   padding: 0.75rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   min-width: 200px;
+  max-width: 300px;
 }
 
 .tooltip-title {
@@ -161,6 +267,48 @@
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+}
+
+/* Status badge in tooltip */
+.tooltip-status {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.tooltip-status.not-started {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.tooltip-status.on-track {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.tooltip-status.at-risk {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.tooltip-status.overdue {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.tooltip-status.completed {
+  background-color: #cfe2ff;
+  color: #084298;
+}
+
+/* Date display in tooltip */
+.tooltip-dates {
+  font-weight: 500;
+  color: #212529;
 }
 
 /* Mobile responsiveness */

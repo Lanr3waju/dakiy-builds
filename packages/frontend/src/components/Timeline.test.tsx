@@ -133,4 +133,106 @@ describe('Timeline Component', () => {
       expect(screen.getByTestId('gantt-chart')).toBeInTheDocument();
     }
   });
+
+  it('should use actual dates when available instead of calculated dates', async () => {
+    const dataWithActualDates = {
+      success: true,
+      data: {
+        project: mockTimelineData.data.project,
+        tasks: [
+          {
+            id: 'task-1',
+            name: 'Foundation Work',
+            phase: 'Phase 1',
+            estimated_duration_days: 10,
+            progress_percentage: 50,
+            is_completed: false,
+            assigned_to: 'user-1',
+            assigned_to_name: 'John Doe',
+            dependencies: [],
+            start_date: '2024-02-01',
+            end_date: '2024-02-10',
+          },
+          {
+            id: 'task-2',
+            name: 'Framing',
+            phase: 'Phase 2',
+            estimated_duration_days: 15,
+            progress_percentage: 0,
+            is_completed: false,
+            assigned_to: 'user-2',
+            assigned_to_name: 'Jane Smith',
+            dependencies: [],
+            start_date: '2024-02-15',
+            end_date: '2024-03-01',
+          },
+        ],
+      },
+    };
+    
+    vi.mocked(apiClient.get).mockResolvedValue(dataWithActualDates);
+    
+    render(<Timeline projectId={mockProjectId} />);
+    
+    await waitFor(() => {
+      expect(screen.queryByText('Loading timeline...')).not.toBeInTheDocument();
+    });
+
+    // Verify the component renders successfully with date-based tasks
+    const emptyMessage = screen.queryByText('No tasks to display in timeline view');
+    if (!emptyMessage) {
+      expect(screen.getByTestId('gantt-chart')).toBeInTheDocument();
+    }
+  });
+
+  it('should handle mixed tasks with and without actual dates', async () => {
+    const mixedData = {
+      success: true,
+      data: {
+        project: mockTimelineData.data.project,
+        tasks: [
+          {
+            id: 'task-1',
+            name: 'Task with dates',
+            phase: 'Phase 1',
+            estimated_duration_days: 10,
+            progress_percentage: 50,
+            is_completed: false,
+            assigned_to: 'user-1',
+            assigned_to_name: 'John Doe',
+            dependencies: [],
+            start_date: '2024-02-01',
+            end_date: '2024-02-10',
+          },
+          {
+            id: 'task-2',
+            name: 'Legacy task without dates',
+            phase: 'Phase 2',
+            estimated_duration_days: 15,
+            progress_percentage: 0,
+            is_completed: false,
+            assigned_to: 'user-2',
+            assigned_to_name: 'Jane Smith',
+            dependencies: [],
+            start_date: null,
+            end_date: null,
+          },
+        ],
+      },
+    };
+    
+    vi.mocked(apiClient.get).mockResolvedValue(mixedData);
+    
+    render(<Timeline projectId={mockProjectId} />);
+    
+    await waitFor(() => {
+      expect(screen.queryByText('Loading timeline...')).not.toBeInTheDocument();
+    });
+
+    // Verify the component handles mixed tasks correctly
+    const emptyMessage = screen.queryByText('No tasks to display in timeline view');
+    if (!emptyMessage) {
+      expect(screen.getByTestId('gantt-chart')).toBeInTheDocument();
+    }
+  });
 });

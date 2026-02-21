@@ -131,9 +131,14 @@ describe('Task Service', () => {
 
     it('should throw ValidationError if assigned user does not exist', async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [] }) // BEGIN
-        .mockResolvedValueOnce({ rows: [{ id: projectId }] }) // Project check
-        .mockResolvedValueOnce({ rows: [] }); // User check - not found
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN - first call
+        .mockResolvedValueOnce({ rows: [{ id: projectId }] }) // Project check - first call
+        .mockResolvedValueOnce({ rows: [] }) // User check - not found - first call
+        .mockResolvedValueOnce({ rows: [] }) // ROLLBACK - first call
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN - second call
+        .mockResolvedValueOnce({ rows: [{ id: projectId }] }) // Project check - second call
+        .mockResolvedValueOnce({ rows: [] }) // User check - not found - second call
+        .mockResolvedValueOnce({ rows: [] }); // ROLLBACK - second call
 
       await expect(createTask(projectId, taskData, userId)).rejects.toThrow(
         ValidationError
@@ -214,10 +219,16 @@ describe('Task Service', () => {
 
     it('should throw ValidationError if no fields to update', async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN - first call
         .mockResolvedValueOnce({
           rows: [{ id: taskId, project_id: 'project-123' }],
-        }); // Task check
+        }) // Task check - first call
+        .mockResolvedValueOnce({ rows: [] }) // ROLLBACK - first call
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN - second call
+        .mockResolvedValueOnce({
+          rows: [{ id: taskId, project_id: 'project-123' }],
+        }) // Task check - second call
+        .mockResolvedValueOnce({ rows: [] }); // ROLLBACK - second call
 
       await expect(updateTask(taskId, {}, userId)).rejects.toThrow(
         ValidationError
@@ -290,7 +301,9 @@ describe('Task Service', () => {
     });
 
     it('should throw NotFoundError if task does not exist or no access', async () => {
-      (pool.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
+      (pool.query as jest.Mock)
+        .mockResolvedValueOnce({ rows: [] }) // First call
+        .mockResolvedValueOnce({ rows: [] }); // Second call
 
       await expect(getTask(taskId, userId)).rejects.toThrow(NotFoundError);
       await expect(getTask(taskId, userId)).rejects.toThrow(
@@ -368,7 +381,7 @@ describe('Task Service', () => {
 
     it('should throw ValidationError if tasks are in different projects', async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN - first call
         .mockResolvedValueOnce({
           rows: [
             {
@@ -378,7 +391,20 @@ describe('Task Service', () => {
               project2_id: 'project-456',
             },
           ],
-        }); // Tasks check - different projects
+        }) // Tasks check - different projects - first call
+        .mockResolvedValueOnce({ rows: [] }) // ROLLBACK - first call
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN - second call
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              task1_id: taskId,
+              project1_id: 'project-123',
+              task2_id: dependsOnTaskId,
+              project2_id: 'project-456',
+            },
+          ],
+        }) // Tasks check - different projects - second call
+        .mockResolvedValueOnce({ rows: [] }); // ROLLBACK - second call
 
       await expect(
         addDependency(taskId, dependsOnTaskId, userId)
@@ -391,7 +417,7 @@ describe('Task Service', () => {
 
     it('should throw ValidationError if dependency already exists', async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN - first call
         .mockResolvedValueOnce({
           rows: [
             {
@@ -401,9 +427,24 @@ describe('Task Service', () => {
               project2_id: 'project-123',
             },
           ],
-        }) // Tasks check
-        .mockResolvedValueOnce({ rows: [{ id: 'project-123' }] }) // Access check
-        .mockResolvedValueOnce({ rows: [{ id: 'dep-123' }] }); // Existing dependency
+        }) // Tasks check - first call
+        .mockResolvedValueOnce({ rows: [{ id: 'project-123' }] }) // Access check - first call
+        .mockResolvedValueOnce({ rows: [{ id: 'dep-123' }] }) // Existing dependency - first call
+        .mockResolvedValueOnce({ rows: [] }) // ROLLBACK - first call
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN - second call
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              task1_id: taskId,
+              project1_id: 'project-123',
+              task2_id: dependsOnTaskId,
+              project2_id: 'project-123',
+            },
+          ],
+        }) // Tasks check - second call
+        .mockResolvedValueOnce({ rows: [{ id: 'project-123' }] }) // Access check - second call
+        .mockResolvedValueOnce({ rows: [{ id: 'dep-123' }] }) // Existing dependency - second call
+        .mockResolvedValueOnce({ rows: [] }); // ROLLBACK - second call
 
       await expect(
         addDependency(taskId, dependsOnTaskId, userId)

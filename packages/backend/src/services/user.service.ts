@@ -338,6 +338,80 @@ export async function updateUser(
 }
 
 /**
+ * Update own profile (firstName and lastName only)
+ * Any authenticated user can update their own profile
+ * @param userId - ID of user updating their profile
+ * @param data - Update data (only firstName and lastName allowed)
+ * @returns Updated user
+ * @throws ValidationError if input is invalid
+ * @throws NotFoundError if user doesn't exist
+ */
+export async function updateOwnProfile(
+  userId: string,
+  data: { firstName?: string; lastName?: string }
+): Promise<User> {
+  // Validate input
+  if (Object.keys(data).length === 0) {
+    throw new ValidationError('At least one field must be provided for update');
+  }
+
+  // Only allow firstName and lastName updates
+  const allowedFields = ['firstName', 'lastName'];
+  const providedFields = Object.keys(data);
+  const invalidFields = providedFields.filter(field => !allowedFields.includes(field));
+  
+  if (invalidFields.length > 0) {
+    throw new ValidationError(`Cannot update fields: ${invalidFields.join(', ')}. Only firstName and lastName can be updated.`);
+  }
+
+  const client = await pool.connect();
+
+  try {
+    // Check if user exists
+    const existingUser = await client.query(
+      'SELECT id FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (existingUser.rows.length === 0) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Build update query
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
+
+    if (data.firstName !== undefined) {
+      updates.push(`first_name = $${paramCount++}`);
+      values.push(data.firstName.trim());
+    }
+
+    if (data.lastName !== undefined) {
+      updates.push(`last_name = $${paramCount++}`);
+      values.push(data.lastName.trim());
+    }
+
+    values.push(userId);
+
+    const result = await client.query(
+      `UPDATE users 
+       SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $${paramCount}
+       RETURNING id, email, first_name, last_name, role, is_active, created_at, updated_at`,
+      values
+    );
+
+    logger.info('User profile updated', { userId });
+
+    return result.rows[0];
+  } finally {
+    client.release();
+  }
+}
+
+
+/**
  * Delete a user
  * Only admins can delete users
  * Prevents deletion of the last admin user

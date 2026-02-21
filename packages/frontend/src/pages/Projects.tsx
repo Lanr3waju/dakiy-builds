@@ -9,11 +9,13 @@ interface Project {
   name: string;
   location: string;
   budget: number;
-  start_date: string;
-  planned_end_date: string;
-  actual_end_date?: string;
-  status: string;
-  created_at: string;
+  startDate: string;
+  endDate?: string;
+  plannedCompletionDate: string;
+  ownerId: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 function Projects() {
@@ -47,7 +49,8 @@ function Projects() {
   const filteredProjects = projects.filter((project) => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+    const status = project.isActive ? 'active' : 'inactive';
+    const matchesStatus = statusFilter === 'all' || status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -173,11 +176,11 @@ function Projects() {
                   <td className="project-name">{project.name}</td>
                   <td>{project.location}</td>
                   <td>{formatCurrency(project.budget)}</td>
-                  <td>{formatDate(project.start_date)}</td>
-                  <td>{formatDate(project.planned_end_date)}</td>
+                  <td>{formatDate(project.startDate)}</td>
+                  <td>{formatDate(project.plannedCompletionDate)}</td>
                   <td>
-                    <span className={`status-badge status-${project.status}`}>
-                      {project.status}
+                    <span className={`status-badge status-${project.isActive ? 'active' : 'inactive'}`}>
+                      {project.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="actions">
@@ -207,8 +210,8 @@ function Projects() {
             >
               <div className="card-header">
                 <h3>{project.name}</h3>
-                <span className={`status-badge status-${project.status}`}>
-                  {project.status}
+                <span className={`status-badge status-${project.isActive ? 'active' : 'inactive'}`}>
+                  {project.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
               <div className="card-body">
@@ -222,11 +225,11 @@ function Projects() {
                 </div>
                 <div className="card-field">
                   <span className="label">Start Date:</span>
-                  <span>{formatDate(project.start_date)}</span>
+                  <span>{formatDate(project.startDate)}</span>
                 </div>
                 <div className="card-field">
                   <span className="label">End Date:</span>
-                  <span>{formatDate(project.planned_end_date)}</span>
+                  <span>{formatDate(project.plannedCompletionDate)}</span>
                 </div>
               </div>
             </div>

@@ -462,7 +462,7 @@ export async function listDocuments(
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const result = await pool.query(
-    `SELECT d.*
+    `SELECT d.*, d.created_at as uploaded_at
      FROM documents d
      ${whereClause}
      ORDER BY d.created_at DESC`,
@@ -796,7 +796,7 @@ export async function getDocumentVersions(
   }
 
   const result = await pool.query(
-    `SELECT * FROM document_versions 
+    `SELECT *, created_at as uploaded_at FROM document_versions 
      WHERE document_id = $1 
      ORDER BY version_number DESC`,
     [documentId]
@@ -813,7 +813,7 @@ export async function searchDocuments(
   _userId: string
 ): Promise<Document[]> {
   const result = await pool.query(
-    `SELECT d.*
+    `SELECT d.*, d.created_at as uploaded_at
      FROM documents d
      WHERE d.is_deleted = false
      AND (

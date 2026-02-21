@@ -5,9 +5,9 @@ export enum UserRole {
 }
 
 export enum ProjectRole {
-  OWNER = 'owner',
-  MANAGER = 'manager',
-  MEMBER = 'member',
+  ADMIN = 'Admin',
+  PROJECT_MANAGER = 'Project_Manager',
+  TEAM_MEMBER = 'Team_Member',
 }
 
 export enum RiskLevel {

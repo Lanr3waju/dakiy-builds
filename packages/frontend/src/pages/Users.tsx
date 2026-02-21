@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import apiClient from '../lib/api';
 import '../styles/Users.css';
@@ -45,15 +45,19 @@ const Users = () => {
     try {
       setLoading(true);
       const response = await apiClient.get('/users');
+      console.log('Users API response:', response.data);
       const usersData = response.data.data || response.data;
+      console.log('Users data:', usersData);
       setUsers(usersData);
       setError(null);
     } catch (err: any) {
+      console.error('Error fetching users:', err);
       setError(err.response?.data?.message || 'Failed to load users');
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleCreateUser = () => {
     setEditingUser(null);
@@ -135,6 +139,7 @@ const Users = () => {
         day: 'numeric',
       });
     } catch (error) {
+      console.error('Date formatting error:', error, dateString);
       return 'Invalid Date';
     }
   };

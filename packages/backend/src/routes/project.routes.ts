@@ -197,11 +197,6 @@ router.post(
       throw new ValidationError('userId and role are required');
     }
 
-    const validRoles = ['owner', 'manager', 'member'];
-    if (!validRoles.includes(role.toLowerCase())) {
-      throw new ValidationError(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
-    }
-
     await assignTeamMember(id, userId, role, req.user!.id);
 
     logger.info('Team member assigned', { projectId: id, userId, role, assignedBy: req.user!.id });

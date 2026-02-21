@@ -21,14 +21,16 @@ function EditProject() {
     try {
       setLoading(true);
       const response = await apiClient.get(`/projects/${id}`);
+      // Backend returns { success: true, data: project }
+      const project = response.data.data || response.data;
       setInitialData({
-        name: response.data.name,
-        description: response.data.description || '',
-        location: response.data.location,
-        budget: response.data.budget.toString(),
-        start_date: response.data.start_date.split('T')[0],
-        planned_end_date: response.data.planned_end_date.split('T')[0],
-        status: response.data.status,
+        name: project.name,
+        description: project.description || '',
+        location: project.location,
+        budget: project.budget.toString(),
+        start_date: project.startDate.split('T')[0],
+        planned_end_date: project.plannedCompletionDate.split('T')[0],
+        status: project.isActive ? 'active' : 'inactive',
       });
       setError(null);
     } catch (err: any) {

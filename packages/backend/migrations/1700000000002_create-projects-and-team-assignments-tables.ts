@@ -15,7 +15,7 @@ export const shorthands: any = undefined;
  */
 export async function up(pgm: MigrationBuilder): Promise<void> {
   // Create project_role enum for team member roles
-  pgm.createType('project_role', ['Owner', 'Manager', 'Member', 'Viewer']);
+  pgm.createType('project_role', ['Admin', 'Project_Manager', 'Team_Member']);
 
   // Create projects table
   pgm.createTable('projects', {
@@ -132,7 +132,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     role: {
       type: 'project_role',
       notNull: true,
-      default: 'Member',
+      default: 'Team_Member',
     },
     assigned_at: {
       type: 'timestamp',
@@ -170,7 +170,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
     COMMENT ON TABLE projects IS 'Construction projects with metadata and deadlines';
     COMMENT ON TABLE project_team_members IS 'Junction table for project team assignments with roles';
-    COMMENT ON TYPE project_role IS 'Project team member roles: Owner, Manager, Member, Viewer';
+    COMMENT ON TYPE project_role IS 'Project team member roles: Admin, Team_Member, Project_Manager';
     COMMENT ON COLUMN projects.owner_id IS 'User who created the project';
     COMMENT ON COLUMN projects.budget IS 'Project budget in currency units';
     COMMENT ON COLUMN projects.end_date IS 'Actual or current end date';

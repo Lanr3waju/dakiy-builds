@@ -12,6 +12,11 @@ import {
   getProgressHistory,
   CreateTaskDTO,
   UpdateTaskDTO,
+  Task,
+  calculateAutoProgress,
+  determineTaskStatus,
+  calculateDaysRemaining,
+  calculateDuration,
 } from '../services/task.service';
 import {
   authenticate,
@@ -27,6 +32,33 @@ const router = Router();
 router.use(authenticate);
 
 /**
+ * Enrich task with calculated fields
+ * Handles both date-based and legacy duration-based tasks
+ */
+function enrichTaskWithCalculatedFields(task: Task) {
+  const enriched: any = { ...task };
+  
+  // Calculate duration if dates are present (date-based tasks)
+  if (task.start_date && task.end_date) {
+    enriched.duration = calculateDuration(task.start_date, task.end_date);
+  }
+  // For legacy tasks without dates, duration comes from estimated_duration_days
+  
+  // Calculate days remaining (returns null for legacy tasks without end_date)
+  enriched.days_remaining = calculateDaysRemaining(task);
+  
+  // Determine status (returns 'in_progress' for legacy tasks without dates)
+  enriched.status = determineTaskStatus(task);
+  
+  // Calculate auto progress if enabled (returns current progress for legacy tasks)
+  if (task.auto_progress_enabled) {
+    enriched.auto_progress = calculateAutoProgress(task);
+  }
+  
+  return enriched;
+}
+
+/**
  * POST /api/projects/:projectId/tasks
  * Create a new task
  */
@@ -34,7 +66,16 @@ router.post(
   '/projects/:projectId/tasks',
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { projectId } = req.params;
-    const { name, description, phase, estimatedDurationDays, assignedTo } = req.body;
+    const { 
+      name, 
+      description, 
+      phase, 
+      estimatedDurationDays, 
+      assignedTo,
+      startDate,
+      endDate,
+      autoProgressEnabled
+    } = req.body;
 
     if (!projectId) {
       throw new ValidationError('Project ID is required');
@@ -50,15 +91,21 @@ router.post(
       phase,
       estimated_duration_days: estimatedDurationDays ? parseInt(estimatedDurationDays) : 1,
       assigned_to: assignedTo,
+      startDate,
+      endDate,
+      autoProgressEnabled,
     };
 
     const task = await createTask(projectId, taskDTO, req.user!.id);
 
     logger.info('Task created', { taskId: task.id, projectId, createdBy: req.user!.id });
 
+    // Enrich task with calculated fields
+    const enrichedTask = enrichTaskWithCalculatedFields(task);
+
     res.status(201).json({
       success: true,
-      data: task,
+      data: enrichedTask,
     });
   })
 );
@@ -71,7 +118,16 @@ router.put(
   '/tasks/:id',
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const { name, description, phase, estimatedDurationDays, assignedTo } = req.body;
+    const { 
+      name, 
+      description, 
+      phase, 
+      estimatedDurationDays, 
+      assignedTo,
+      startDate,
+      endDate,
+      autoProgressEnabled
+    } = req.body;
 
     if (!id) {
       throw new ValidationError('Task ID is required');
@@ -83,14 +139,20 @@ router.put(
     if (phase !== undefined) updateDTO.phase = phase;
     if (estimatedDurationDays !== undefined) updateDTO.estimated_duration_days = parseInt(estimatedDurationDays);
     if (assignedTo !== undefined) updateDTO.assigned_to = assignedTo;
+    if (startDate !== undefined) updateDTO.startDate = startDate;
+    if (endDate !== undefined) updateDTO.endDate = endDate;
+    if (autoProgressEnabled !== undefined) updateDTO.autoProgressEnabled = autoProgressEnabled;
 
     const updatedTask = await updateTask(id, updateDTO, req.user!.id);
 
     logger.info('Task updated', { taskId: id, updatedBy: req.user!.id });
 
+    // Enrich task with calculated fields
+    const enrichedTask = enrichTaskWithCalculatedFields(updatedTask);
+
     res.status(200).json({
       success: true,
-      data: updatedTask,
+      data: enrichedTask,
     });
   })
 );
@@ -134,9 +196,12 @@ router.get(
 
     const task = await getTask(id, req.user!.id);
 
+    // Enrich task with calculated fields
+    const enrichedTask = enrichTaskWithCalculatedFields(task);
+
     res.status(200).json({
       success: true,
-      data: task,
+      data: enrichedTask,
     });
   })
 );
@@ -156,10 +221,13 @@ router.get(
 
     const tasks = await listTasksByProject(projectId, req.user!.id);
 
+    // Enrich all tasks with calculated fields
+    const enrichedTasks = tasks.map(task => enrichTaskWithCalculatedFields(task));
+
     res.status(200).json({
       success: true,
-      data: tasks,
-      count: tasks.length,
+      data: enrichedTasks,
+      count: enrichedTasks.length,
     });
   })
 );

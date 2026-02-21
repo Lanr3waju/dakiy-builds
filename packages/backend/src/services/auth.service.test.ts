@@ -104,13 +104,17 @@ describe('Authentication Service', () => {
     };
 
     beforeEach(() => {
-      // Mock verifyPassword to return true by default
-      jest.spyOn(authService, 'verifyPassword').mockResolvedValue(true);
+      // Reset the spy before each test
+      jest.restoreAllMocks();
     });
 
     it('should successfully login with valid credentials', async () => {
+      // Create a real hash for the password
+      const realHash = await authService.hashPassword(validCredentials.password);
+      const userWithRealHash = { ...mockUser, password_hash: realHash };
+
       mockClient.query
-        .mockResolvedValueOnce({ rows: [mockUser] }) // User query
+        .mockResolvedValueOnce({ rows: [userWithRealHash] }) // User query
         .mockResolvedValueOnce({ rows: [mockSession] }); // Session insert
 
       const result = await authService.login(validCredentials);
@@ -146,7 +150,9 @@ describe('Authentication Service', () => {
     });
 
     it('should throw AuthenticationError when user does not exist', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // No user found
+      mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // No user found - first call
+        .mockResolvedValueOnce({ rows: [] }); // No user found - second call
 
       await expect(authService.login(validCredentials)).rejects.toThrow(AuthenticationError);
       await expect(authService.login(validCredentials)).rejects.toThrow(
@@ -157,7 +163,9 @@ describe('Authentication Service', () => {
 
     it('should throw AuthenticationError when user is inactive', async () => {
       const inactiveUser = { ...mockUser, is_active: false };
-      mockClient.query.mockResolvedValueOnce({ rows: [inactiveUser] });
+      mockClient.query
+        .mockResolvedValueOnce({ rows: [inactiveUser] }) // First call
+        .mockResolvedValueOnce({ rows: [inactiveUser] }); // Second call
 
       await expect(authService.login(validCredentials)).rejects.toThrow(AuthenticationError);
       await expect(authService.login(validCredentials)).rejects.toThrow('Account is inactive');
@@ -165,8 +173,13 @@ describe('Authentication Service', () => {
     });
 
     it('should throw AuthenticationError when password is incorrect', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [mockUser] });
-      jest.spyOn(authService, 'verifyPassword').mockResolvedValue(false);
+      // Create a hash for a different password
+      const wrongHash = await authService.hashPassword('differentPassword123');
+      const userWithWrongHash = { ...mockUser, password_hash: wrongHash };
+      
+      mockClient.query
+        .mockResolvedValueOnce({ rows: [userWithWrongHash] }) // First call
+        .mockResolvedValueOnce({ rows: [userWithWrongHash] }); // Second call
 
       await expect(authService.login(validCredentials)).rejects.toThrow(AuthenticationError);
       await expect(authService.login(validCredentials)).rejects.toThrow(
@@ -176,8 +189,12 @@ describe('Authentication Service', () => {
     });
 
     it('should convert email to lowercase', async () => {
+      // Create a real hash for the password
+      const realHash = await authService.hashPassword('password123');
+      const userWithRealHash = { ...mockUser, password_hash: realHash };
+
       mockClient.query
-        .mockResolvedValueOnce({ rows: [mockUser] })
+        .mockResolvedValueOnce({ rows: [userWithRealHash] })
         .mockResolvedValueOnce({ rows: [mockSession] });
 
       await authService.login({ email: 'TEST@EXAMPLE.COM', password: 'password123' });
@@ -189,8 +206,12 @@ describe('Authentication Service', () => {
     });
 
     it('should create session with expiration date', async () => {
+      // Create a real hash for the password
+      const realHash = await authService.hashPassword(validCredentials.password);
+      const userWithRealHash = { ...mockUser, password_hash: realHash };
+
       mockClient.query
-        .mockResolvedValueOnce({ rows: [mockUser] })
+        .mockResolvedValueOnce({ rows: [userWithRealHash] })
         .mockResolvedValueOnce({ rows: [mockSession] });
 
       const result = await authService.login(validCredentials);
@@ -245,7 +266,9 @@ describe('Authentication Service', () => {
     });
 
     it('should throw AuthenticationError for invalid token', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // No session found
+      mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // No session found - first call
+        .mockResolvedValueOnce({ rows: [] }); // No session found - second call
 
       await expect(authService.validateSession('invalid-token')).rejects.toThrow(
         AuthenticationError
@@ -262,8 +285,10 @@ describe('Authentication Service', () => {
         expires_at: new Date(Date.now() - 1000), // Expired
       };
       mockClient.query
-        .mockResolvedValueOnce({ rows: [expiredSession] }) // Session query
-        .mockResolvedValueOnce({ rows: [] }); // Delete query
+        .mockResolvedValueOnce({ rows: [expiredSession] }) // Session query - first call
+        .mockResolvedValueOnce({ rows: [] }) // Delete query - first call
+        .mockResolvedValueOnce({ rows: [expiredSession] }) // Session query - second call
+        .mockResolvedValueOnce({ rows: [] }); // Delete query - second call
 
       await expect(authService.validateSession(mockToken)).rejects.toThrow(AuthenticationError);
       await expect(authService.validateSession(mockToken)).rejects.toThrow(
@@ -280,7 +305,9 @@ describe('Authentication Service', () => {
 
     it('should throw AuthenticationError when user is inactive', async () => {
       const inactiveUserSession = { ...mockSessionData, is_active: false };
-      mockClient.query.mockResolvedValueOnce({ rows: [inactiveUserSession] });
+      mockClient.query
+        .mockResolvedValueOnce({ rows: [inactiveUserSession] }) // First call
+        .mockResolvedValueOnce({ rows: [inactiveUserSession] }); // Second call
 
       await expect(authService.validateSession(mockToken)).rejects.toThrow(AuthenticationError);
       await expect(authService.validateSession(mockToken)).rejects.toThrow('Account is inactive');
@@ -331,7 +358,9 @@ describe('Authentication Service', () => {
     });
 
     it('should throw AuthenticationError for invalid token', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // No session found
+      mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // No session found - first call
+        .mockResolvedValueOnce({ rows: [] }); // No session found - second call
 
       await expect(authService.logout('invalid-token')).rejects.toThrow(AuthenticationError);
       await expect(authService.logout('invalid-token')).rejects.toThrow('Invalid session token');

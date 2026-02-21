@@ -168,7 +168,7 @@ router.get(
         t.progress_percentage,
         t.is_completed,
         t.assigned_to,
-        u.username as assigned_to_name,
+        CONCAT(u.first_name, ' ', u.last_name) as assigned_to_name,
         COALESCE(
           json_agg(
             json_build_object('depends_on_task_id', td.depends_on_task_id)
@@ -180,7 +180,7 @@ router.get(
        LEFT JOIN users u ON t.assigned_to = u.id
        WHERE t.project_id = $1
        GROUP BY t.id, t.name, t.phase, t.estimated_duration_days, 
-                t.progress_percentage, t.is_completed, t.assigned_to, u.username
+                t.progress_percentage, t.is_completed, t.assigned_to, u.first_name, u.last_name
        ORDER BY t.phase, t.created_at`,
       [id]
     );

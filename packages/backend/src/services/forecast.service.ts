@@ -12,6 +12,8 @@ interface Task {
   progress_percentage: number;
   is_completed: boolean;
   dependencies: string[];
+  start_date?: Date | string;
+  end_date?: Date | string;
 }
 
 interface ProgressHistory {
@@ -87,7 +89,7 @@ export class ForecastService {
       cached_at: new Date(),
     };
 
-    await this.storeForecast(forecast);
+    await this.storeForecast(forecast, userId);
     await this.cacheForecast(projectId, forecast);
 
     return forecast;
@@ -95,7 +97,7 @@ export class ForecastService {
 
   private async getProjectTasks(projectId: string): Promise<Task[]> {
     const result = await pool.query(
-      'SELECT t.id, t.name, t.phase, t.estimated_duration_days, t.progress_percentage, t.is_completed, COALESCE(json_agg(td.depends_on_task_id) FILTER (WHERE td.depends_on_task_id IS NOT NULL), $2) as dependencies FROM tasks t LEFT JOIN task_dependencies td ON t.id = td.task_id WHERE t.project_id = $1 GROUP BY t.id ORDER BY t.created_at',
+      'SELECT t.id, t.name, t.phase, t.estimated_duration_days, t.progress_percentage, t.is_completed, t.start_date, t.end_date, COALESCE(json_agg(td.depends_on_task_id) FILTER (WHERE td.depends_on_task_id IS NOT NULL), $2) as dependencies FROM tasks t LEFT JOIN task_dependencies td ON t.id = td.task_id WHERE t.project_id = $1 GROUP BY t.id ORDER BY t.created_at',
       [projectId, '[]']
     );
 
@@ -116,7 +118,9 @@ export class ForecastService {
     tasks.forEach(task => {
       if (task.dependencies.length === 0) {
         queue.push(task.id);
-        longestPath.set(task.id, task.estimated_duration_days);
+        // Use date-based duration if available, otherwise fall back to estimated_duration_days
+        const duration = this.getTaskDuration(task);
+        longestPath.set(task.id, duration);
       }
     });
 
@@ -126,7 +130,8 @@ export class ForecastService {
 
       tasks.forEach(task => {
         if (task.dependencies.includes(currentId)) {
-          const newPath = currentPath + task.estimated_duration_days;
+          const duration = this.getTaskDuration(task);
+          const newPath = currentPath + duration;
           if (newPath > (longestPath.get(task.id) || 0)) {
             longestPath.set(task.id, newPath);
             predecessor.set(task.id, currentId);
@@ -161,6 +166,23 @@ export class ForecastService {
     return criticalPath;
   }
 
+  /**
+   * Get task duration in days, using actual dates if available, otherwise falling back to estimated_duration_days
+   */
+  private getTaskDuration(task: Task): number {
+    // If task has both start and end dates, calculate duration from dates
+    if (task.start_date && task.end_date) {
+      const start = new Date(task.start_date);
+      const end = new Date(task.end_date);
+      const diffTime = end.getTime() - start.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return Math.max(0, diffDays);
+    }
+    
+    // Fall back to estimated_duration_days for legacy tasks
+    return task.estimated_duration_days || 0;
+  }
+
   private async getProgressHistory(projectId: string): Promise<ProgressHistory[]> {
     const result = await pool.query(
       'SELECT tph.created_at as date, tph.progress_percentage FROM task_progress_history tph JOIN tasks t ON tph.task_id = t.id WHERE t.project_id = $1 ORDER BY tph.created_at ASC',
@@ -185,12 +207,23 @@ export class ForecastService {
       }
     }
 
-    return tasks.map(task => ({
-      ...task,
-      estimated_duration_days: task.is_completed 
-        ? 0 
-        : Math.ceil(task.estimated_duration_days * velocityFactor * (1 - task.progress_percentage / 100)),
-    }));
+    return tasks.map(task => {
+      // If task is completed, no remaining duration
+      if (task.is_completed) {
+        return { ...task, estimated_duration_days: 0 };
+      }
+
+      // Use date-based duration if available
+      const baseDuration = this.getTaskDuration(task);
+      
+      // Apply velocity factor and progress adjustment
+      const adjustedDuration = Math.ceil(baseDuration * velocityFactor * (1 - task.progress_percentage / 100));
+      
+      return {
+        ...task,
+        estimated_duration_days: adjustedDuration,
+      };
+    });
   }
 
   private async calculateCompletionDate(
@@ -292,8 +325,7 @@ export class ForecastService {
         parts.push(`${Math.abs(daysDiff)} days ahead of plan.`);
       } else {
         parts.push(`On schedule.`);
-      }
-    }
+      } }
 
     parts.push(`Risk: ${riskLevel.toUpperCase()}.`);
     parts.push(`Critical path: ${criticalPath.length} tasks, ${totalDays} working days.`);
@@ -302,19 +334,20 @@ export class ForecastService {
     return parts.join(' ');
   }
 
-  private async storeForecast(forecast: Forecast): Promise<void> {
-    await pool.query(
-      'INSERT INTO forecasts (project_id, estimated_completion_date, risk_level, confidence_percentage, explanation, critical_path_task_ids, created_at) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)',
-      [
-        forecast.project_id,
-        forecast.estimated_completion_date,
-        forecast.risk_level,
-        forecast.confidence,
-        forecast.explanation,
-        JSON.stringify(forecast.critical_path),
-      ]
-    );
-  }
+  private async storeForecast(forecast: Forecast, userId: string): Promise<void> {
+  await pool.query(
+    'INSERT INTO forecasts (project_id, estimated_completion_date, risk_level, confidence_score, explanation, factors_considered, generated_by, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)',
+    [
+      forecast.project_id,
+      forecast.estimated_completion_date,
+      forecast.risk_level,
+      forecast.confidence,
+      forecast.explanation,
+      JSON.stringify({ critical_path: forecast.critical_path }),
+      userId, // Use the userId parameter directly
+    ]
+  );
+}
 
   private async cacheForecast(projectId: string, forecast: Forecast): Promise<void> {
     try {

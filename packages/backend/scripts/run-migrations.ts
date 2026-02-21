@@ -1,6 +1,8 @@
 import 'dotenv/config';
-import * as pgMigrate from 'node-pg-migrate';
 import { join } from 'path';
+
+// node-pg-migrate doesn't have a default export, use require
+const pgMigrate = require('node-pg-migrate').default;
 
 async function runMigrations() {
   try {
@@ -8,7 +10,7 @@ async function runMigrations() {
     
     const migrationsDir = join(__dirname, '../migrations');
     
-    await pgMigrate.default({
+    await pgMigrate({
       databaseUrl: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
       dir: migrationsDir,
       direction: 'up',

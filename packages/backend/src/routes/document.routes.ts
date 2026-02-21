@@ -11,6 +11,7 @@ import {
   linkDocumentToTask,
   getDocumentVersions,
   searchDocuments,
+  listDocuments,
   UploadDocumentDTO,
 } from '../services/document.service';
 import {
@@ -144,10 +145,30 @@ router.delete(
 router.get(
   '/',
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { query } = req.query;
+    const { query, project_id, task_id } = req.query;
 
+    // If filtering by project or task, use listDocuments with filters
+    if (project_id || task_id) {
+      const filters: any = {};
+      if (project_id && typeof project_id === 'string') {
+        filters.projectId = project_id;
+      }
+      if (task_id && typeof task_id === 'string') {
+        filters.taskId = task_id;
+      }
+      
+      const documents = await listDocuments(req.user!.id, filters);
+      
+      res.status(200).json({
+        success: true,
+        data: documents,
+        count: documents.length,
+      });
+      return;
+    }
+
+    // Otherwise use search
     const searchQuery = query && typeof query === 'string' ? query : '';
-
     const documents = await searchDocuments(searchQuery, req.user!.id);
 
     res.status(200).json({

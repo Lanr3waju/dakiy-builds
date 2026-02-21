@@ -51,7 +51,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ projectId }) => {
       try {
         setLoading(true);
         setError(null);
-        const response = await apiClient.get(`/analytics/projects/${projectId}/analytics`);
+        const response = await apiClient.get(`/projects/${projectId}/analytics`);
         setAnalyticsData(response.data.data);
       } catch (err: any) {
         console.error('Error fetching analytics:', err);

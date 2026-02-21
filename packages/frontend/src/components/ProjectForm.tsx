@@ -59,17 +59,22 @@ function ProjectForm({ projectId, initialData, onSuccess }: ProjectFormProps) {
   const fetchAvailableUsers = async () => {
     try {
       const response = await apiClient.get('/users');
-      setAvailableUsers(response.data);
+      // Backend returns { success: true, data: users }
+      const users = response.data.data || response.data || [];
+      setAvailableUsers(Array.isArray(users) ? users : []);
     } catch (err) {
       console.error('Failed to fetch users:', err);
+      setAvailableUsers([]);
     }
   };
 
   const fetchExistingTeam = async () => {
     try {
       const response = await apiClient.get(`/projects/${projectId}/team`);
-      const assignments = response.data.map((member: any) => ({
-        user_id: member.user_id,
+      // Backend returns { success: true, data: teamMembers }
+      const teamData = response.data.data || response.data || [];
+      const assignments = (Array.isArray(teamData) ? teamData : []).map((member: any) => ({
+        user_id: member.userId || member.user_id,
         role: member.role,
       }));
       setTeamAssignments(assignments);
@@ -154,9 +159,15 @@ function ProjectForm({ projectId, initialData, onSuccess }: ProjectFormProps) {
     setLoading(true);
 
     try {
+      // Backend expects camelCase field names
       const projectData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description,
+        location: formData.location,
         budget: parseFloat(formData.budget),
+        startDate: formData.start_date,
+        plannedCompletionDate: formData.planned_end_date,
+        status: formData.status,
       };
 
       let projectIdToUse = projectId;
@@ -165,7 +176,9 @@ function ProjectForm({ projectId, initialData, onSuccess }: ProjectFormProps) {
         await apiClient.put(`/projects/${projectId}`, projectData);
       } else {
         const response = await apiClient.post('/projects', projectData);
-        projectIdToUse = response.data.id;
+        // Backend returns { success: true, data: project }
+        const project = response.data.data || response.data;
+        projectIdToUse = project.id;
       }
 
       // Update team assignments
@@ -173,7 +186,11 @@ function ProjectForm({ projectId, initialData, onSuccess }: ProjectFormProps) {
         const validAssignments = teamAssignments.filter((a) => a.user_id);
         for (const assignment of validAssignments) {
           try {
-            await apiClient.post(`/projects/${projectIdToUse}/team`, assignment);
+            // Backend expects userId (camelCase) and role
+            await apiClient.post(`/projects/${projectIdToUse}/team`, {
+              userId: assignment.user_id,
+              role: assignment.role,
+            });
           } catch (err) {
             console.error('Failed to assign team member:', err);
           }
@@ -325,7 +342,7 @@ function ProjectForm({ projectId, initialData, onSuccess }: ProjectFormProps) {
                     }
                   >
                     <option value="">Select user...</option>
-                    {availableUsers.map((user) => (
+                    {(Array.isArray(availableUsers) ? availableUsers : []).map((user) => (
                       <option key={user.id} value={user.id}>
                         {user.username} ({user.email})
                       </option>

@@ -129,6 +129,9 @@ describe('Project Service', () => {
         plannedCompletionDate: new Date(),
       };
 
+      // Mock the role check that happens before validation
+      mockClient.query.mockResolvedValueOnce({ rows: [{ role: 'Admin' }] });
+
       await expect(createProject(invalidData, userId)).rejects.toThrow(ValidationError);
     });
 
@@ -461,7 +464,7 @@ describe('Project Service', () => {
     const projectId = 'project-123';
     const targetUserId = 'user-456';
     const assignedBy = 'user-123';
-    const role = 'Member';
+    const role = 'Team_Member';
 
     beforeEach(() => {
       // Import the function for testing
@@ -592,7 +595,7 @@ describe('Project Service', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [{ id: projectId, name: 'Test Project' }] }) // Check project exists
         .mockResolvedValueOnce({ rows: [{ role: 'Admin' }] }) // hasProjectAccess - user role
-        .mockResolvedValueOnce({ rows: [{ id: 'assignment-123', role: 'Member' }] }) // Check assignment exists
+        .mockResolvedValueOnce({ rows: [{ id: 'assignment-123', role: 'Team_Member' }] }) // Check assignment exists
         .mockResolvedValueOnce({ rows: [] }) // DELETE team member
         .mockResolvedValueOnce({ rows: [] }) // INSERT audit log
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
@@ -654,7 +657,7 @@ describe('Project Service', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [{ id: projectId, name: 'Test' }] }) // Check project exists
         .mockResolvedValueOnce({ rows: [{ role: 'Admin' }] }) // hasProjectAccess - user role
-        .mockResolvedValueOnce({ rows: [{ id: 'assignment-123', role: 'Member' }] }) // Check assignment exists
+        .mockResolvedValueOnce({ rows: [{ id: 'assignment-123', role: 'Team_Member' }] }) // Check assignment exists
         .mockRejectedValueOnce(new Error('Database error')); // DELETE fails
 
       await expect(
